@@ -1,0 +1,12 @@
+{
+  "Author": "zhudotexe",
+  "Name": "ReadyCheck",
+  "Description": "This plugin replaces active ready checks with a passive system like those in multiplayer game lobbies, allowing players to mark themselves as ready instead of relying on someone to start a ready check.",
+  "InternalName": "ReadyCheck",
+  "RepoUrl": "https://github.com/zhudotexe/FFXIV_ReadyCheck",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "utility"
+  ],
+  "DalamudApiLevel": 5
+}
