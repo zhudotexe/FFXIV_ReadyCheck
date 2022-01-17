@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Objects.Enums;
+using Dalamud.Game.ClientState.Party;
+using Dalamud.Logging;
 
 namespace ReadyCheck {
     public class PartyState : IDisposable {
@@ -20,16 +22,23 @@ namespace ReadyCheck {
         }
 
         public void Reset() {
+            PluginLog.Debug("Resetting ready states");
             readyStates.Clear();
         }
 
+        public bool IsMemberReady(PartyMember member) {
+            return readyStates.TryGetValue(member.ContentId, out bool memberIsReady) && memberIsReady;
+        }
+
         private void OnCombatStateChange(bool isInCombat) {
+            PluginLog.Debug($"Combat state changed: inCombat={isInCombat}");
             if (plugin.Configuration.ResetOnCombat && isInCombat) {
                 Reset();
             }
         }
 
         private void OnReadyStateChange(bool isAllReady) {
+            PluginLog.Debug($"Ready state changed: isReady={isAllReady}");
             if (plugin.Configuration.StartCountdownWhenAllReady && isAllReady) {
                 // todo
             }
@@ -53,7 +62,7 @@ namespace ReadyCheck {
             wasInCombatLastUpdate = isInCombat;
 
             // all ready state change tracking
-            bool isAllReady = plugin.PartyList.All(member => readyStates.TryGetValue(member.ContentId, out bool memberIsReady) && memberIsReady);
+            bool isAllReady = plugin.PartyList.All(IsMemberReady) && plugin.PartyList.Length > 0;
             if (isAllReady != wasAllReadyLastUpdate) {
                 OnReadyStateChange(isAllReady);
             }

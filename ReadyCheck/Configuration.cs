@@ -6,7 +6,7 @@ namespace ReadyCheck {
     [Serializable]
     public class Configuration : IPluginConfiguration {
         [NonSerialized]
-        private DalamudPluginInterface pluginInterface;
+        private Plugin plugin;
 
         public int Version { get; set; } = 1;
 
@@ -16,12 +16,12 @@ namespace ReadyCheck {
         public int CountdownDuration { get; set; } = 15;
         public string RunCommandWhenAllReady { get; set; } = "";
 
-        public void Initialize(DalamudPluginInterface pluginInterface) {
-            this.pluginInterface = pluginInterface;
+        public void Initialize(Plugin plugin) {
+            this.plugin = plugin;
         }
 
         public void Save() {
-            pluginInterface.SavePluginConfig(this);
+            plugin.PluginInterface.SavePluginConfig(this);
         }
     }
 }

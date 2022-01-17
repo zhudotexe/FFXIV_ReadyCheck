@@ -2,7 +2,6 @@ using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Party;
 using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
 using Dalamud.Plugin;
 
 namespace ReadyCheck {
@@ -27,7 +26,7 @@ namespace ReadyCheck {
             PartyList = partyList;
 
             Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-            Configuration.Initialize(pluginInterface);
+            Configuration.Initialize(this);
             UI = new PluginUI(this);
             pluginInterface.UiBuilder.Draw += DrawUI;
             pluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
