@@ -50,7 +50,7 @@ namespace ReadyCheck {
                 foreach (PartyMember member in plugin.PartyList) {
                     ImGui.TableNextRow();
                     ImGui.TableNextColumn();
-                    ImGui.Text($"{member.Name} ({member.ContentId})");
+                    ImGui.Text($"{member.Name}");
 
                     ImGui.TableNextColumn();
                     ImGui.Text(plugin.PartyState.IsMemberReady(member) ? "ready" : "not ready");
@@ -105,6 +105,11 @@ namespace ReadyCheck {
                 plugin.Configuration.RunCommandWhenAllReady = runCommand;
             if (ImGui.IsItemHovered())
                 ImGui.SetTooltip("NOTE: This setting will only run commands added by other Dalamud plugins.");
+            
+            // save
+            if (ImGui.Button("Save")) {
+                plugin.Configuration.Save();
+            }
 
             ImGui.EndTabItem();
         }

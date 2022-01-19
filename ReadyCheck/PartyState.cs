@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Party;
+using Dalamud.Game.Text;
+using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Logging;
 
 namespace ReadyCheck {
@@ -11,14 +15,17 @@ namespace ReadyCheck {
         private readonly Plugin plugin;
         private bool wasInCombatLastUpdate = false;
         private bool wasAllReadyLastUpdate = false;
+        private readonly Regex readyPattern = new Regex(@"^r((ea)?dy)?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private readonly Regex unreadyPattern = new Regex(@"^unr((ea)?dy)?", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         // map of content id => is ready
-        private Dictionary<long, bool> readyStates = new Dictionary<long, bool>();
+        private readonly Dictionary<long, bool> readyStates = new Dictionary<long, bool>();
 
         public PartyState(Plugin plugin) {
             this.plugin = plugin;
             this.plugin.ClientState.TerritoryChanged += OnTerritoryChange;
             this.plugin.Framework.Update += OnUpdate;
+            this.plugin.ChatGui.ChatMessage += OnChatMessage;
         }
 
         public void Reset() {
@@ -40,12 +47,50 @@ namespace ReadyCheck {
         private void OnReadyStateChange(bool isAllReady) {
             PluginLog.Debug($"Ready state changed: isReady={isAllReady}");
             if (plugin.Configuration.StartCountdownWhenAllReady && isAllReady) {
-                // todo
+                plugin.XivCommon.Functions.Chat.SendMessage($"/cd {plugin.Configuration.CountdownDuration}");
             }
 
             if (plugin.Configuration.RunCommandWhenAllReady != "" && isAllReady) {
-                // todo
+                plugin.CommandManager.ProcessCommand(plugin.Configuration.RunCommandWhenAllReady);
             }
+        }
+
+        private void OnPartyMemberReady(long memberContentId) {
+            PluginLog.Debug($"Member ready: {memberContentId}");
+            readyStates[memberContentId] = true;
+        }
+
+        private void OnPartyMemberUnready(long memberContentId) {
+            PluginLog.Debug($"Member unready: {memberContentId}");
+            readyStates[memberContentId] = false;
+        }
+
+        // ==== utils ====
+        private long ResolvePartyMemberFromSenderName(SeString sender) {
+            // if there is only a single RawText node and its value is our name (plus possibly the party number indicator), it's probably the local player
+            if (plugin.ClientState.LocalPlayer is not null
+                && sender.Payloads.Count == 1
+                && sender.Payloads[0].Type == PayloadType.RawText
+                && sender.TextValue.EndsWith(plugin.ClientState.LocalPlayer.Name.TextValue)) {
+                return (long)plugin.ClientState.LocalContentId;
+            }
+
+            // otherwise find the player payload in the sestring
+            PlayerPayload playerPayload = ResolvePlayerPayload(sender);
+            if (playerPayload == null) return -1;
+
+            // and match it to someone in the party with the same name
+            foreach (PartyMember member in plugin.PartyList) {
+                if (member.Name.TextValue == playerPayload.PlayerName && member.World.Id == playerPayload.World.RowId) {
+                    return member.ContentId;
+                }
+            }
+            PluginLog.Warning($"Unable to resolve PartyMember from SeString: {sender}");
+            return -1;
+        }
+
+        private static PlayerPayload ResolvePlayerPayload(SeString seString) {
+            return seString.Payloads.Find(p => p.Type == PayloadType.Player) as PlayerPayload;
         }
 
         // ==== hooks ====
@@ -69,9 +114,25 @@ namespace ReadyCheck {
             wasAllReadyLastUpdate = isAllReady;
         }
 
+        private void OnChatMessage(XivChatType chatType, uint senderId, ref SeString sender, ref SeString message, ref bool isHandled) {
+            // check for party chat
+            if (chatType != XivChatType.Party) return;
+
+            if (readyPattern.IsMatch(message.ToString())) {
+                // if the sender is ready
+                long member = ResolvePartyMemberFromSenderName(sender);
+                if (member != -1) OnPartyMemberReady(member);
+            } else if (unreadyPattern.IsMatch(message.ToString())) {
+                // if the sender is unready
+                long member = ResolvePartyMemberFromSenderName(sender);
+                if (member != -1) OnPartyMemberUnready(member);
+            }
+        }
+
         public void Dispose() {
             plugin.ClientState.TerritoryChanged -= OnTerritoryChange;
             plugin.Framework.Update -= OnUpdate;
+            plugin.ChatGui.ChatMessage -= OnChatMessage;
         }
     }
 }

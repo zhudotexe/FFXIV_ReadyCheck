@@ -2,7 +2,9 @@ using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Party;
 using Dalamud.Game.Command;
+using Dalamud.Game.Gui;
 using Dalamud.Plugin;
+using XivCommon;
 
 namespace ReadyCheck {
     public class Plugin : IDalamudPlugin {
@@ -13,17 +15,21 @@ namespace ReadyCheck {
         internal CommandManager CommandManager;
         internal ClientState ClientState;
         internal PartyList PartyList;
+        internal ChatGui ChatGui;
+        internal XivCommonBase XivCommon;
 
         internal Configuration Configuration;
         internal PluginUI UI;
         internal PartyState PartyState;
 
-        public Plugin(DalamudPluginInterface pluginInterface, Framework framework, CommandManager commandManager, ClientState clientState, PartyList partyList) {
+        public Plugin(DalamudPluginInterface pluginInterface, Framework framework, CommandManager commandManager, ClientState clientState, PartyList partyList, ChatGui chatGui) {
             PluginInterface = pluginInterface;
             Framework = framework;
             CommandManager = commandManager;
             ClientState = clientState;
             PartyList = partyList;
+            ChatGui = chatGui;
+            XivCommon = new XivCommonBase();
 
             Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             Configuration.Initialize(this);
@@ -40,6 +46,7 @@ namespace ReadyCheck {
         public void Dispose() {
             UI.Dispose();
             PartyState.Dispose();
+            XivCommon.Dispose();
             CommandManager.RemoveHandler("/pcheck");
         }
 
