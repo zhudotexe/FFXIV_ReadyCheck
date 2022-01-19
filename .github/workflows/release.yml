@@ -7,7 +7,7 @@ on:
 
 env:
   SOLUTION_NAME: FFXIV_ReadyCheck
-  ZIP_PATH: ReadyCheck\bin\Debug\
+  ZIP_PATH: ReadyCheck\bin\Release\
 
 jobs:
   build:
