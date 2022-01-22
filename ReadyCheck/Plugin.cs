@@ -1,8 +1,10 @@
+using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Party;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
+using Dalamud.Game.Network;
 using Dalamud.Plugin;
 using XivCommon;
 
@@ -16,19 +18,29 @@ namespace ReadyCheck {
         internal ClientState ClientState;
         internal PartyList PartyList;
         internal ChatGui ChatGui;
+        internal GameNetwork Network;
         internal XivCommonBase XivCommon;
 
         internal Configuration Configuration;
         internal PluginUI UI;
         internal PartyState PartyState;
 
-        public Plugin(DalamudPluginInterface pluginInterface, Framework framework, CommandManager commandManager, ClientState clientState, PartyList partyList, ChatGui chatGui) {
+        public Plugin(
+            DalamudPluginInterface pluginInterface,
+            Framework framework,
+            CommandManager commandManager,
+            ClientState clientState,
+            PartyList partyList,
+            ChatGui chatGui,
+            GameNetwork network
+        ) {
             PluginInterface = pluginInterface;
             Framework = framework;
             CommandManager = commandManager;
             ClientState = clientState;
             PartyList = partyList;
             ChatGui = chatGui;
+            Network = network;
             XivCommon = new XivCommonBase();
 
             Configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();

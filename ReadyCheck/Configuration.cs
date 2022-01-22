@@ -9,6 +9,7 @@ namespace ReadyCheck {
 
         public int Version { get; set; } = 1;
 
+        public bool ListenToGameReadyCheck { get; set; } = true;
         public bool ResetOnCombat { get; set; } = true;
         public bool HideDuringCombat { get; set; } = true;
         public bool StartCountdownWhenAllReady { get; set; } = true;

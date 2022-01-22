@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using Dalamud.Game;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Party;
+using Dalamud.Game.Network;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
@@ -26,6 +29,7 @@ namespace ReadyCheck {
             this.plugin.ClientState.TerritoryChanged += OnTerritoryChange;
             this.plugin.Framework.Update += OnUpdate;
             this.plugin.ChatGui.ChatMessage += OnChatMessage;
+            this.plugin.Network.NetworkMessage += OnNetworkMessage;
         }
 
         public void Reset() {
@@ -129,10 +133,28 @@ namespace ReadyCheck {
             }
         }
 
+        private void OnNetworkMessage(IntPtr dataPtr, ushort opCode, uint sourceActorId, uint targetActorId, NetworkMessageDirection direction) {
+            if (!plugin.Configuration.ListenToGameReadyCheck) return;
+            if (direction != NetworkMessageDirection.ZoneDown) return;
+            if (opCode != Opcodes.EventPlay32) return;
+
+            // get party member by actor id and update their ready state
+            long actorId = Marshal.ReadInt64(dataPtr);
+            int eventId = Marshal.ReadInt32(dataPtr + 0x8);
+            PluginLog.Debug($"Got EventPlay32 from {actorId}, eventId={eventId}");
+
+            if (eventId == Opcodes.EventIdReadyCheckReady) {
+                OnPartyMemberReady(actorId);
+            } else if (eventId == Opcodes.EventIdReadyCheckNotReady) {
+                OnPartyMemberUnready(actorId);
+            }
+        }
+
         public void Dispose() {
             plugin.ClientState.TerritoryChanged -= OnTerritoryChange;
             plugin.Framework.Update -= OnUpdate;
             plugin.ChatGui.ChatMessage -= OnChatMessage;
+            plugin.Network.NetworkMessage -= OnNetworkMessage;
         }
     }
 }
