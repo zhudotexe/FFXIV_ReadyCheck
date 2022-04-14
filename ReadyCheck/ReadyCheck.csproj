@@ -14,7 +14,7 @@
         <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <AssemblyName>ReadyCheck</AssemblyName>
-        <AssemblyVersion>0.0.1</AssemblyVersion>
+        <AssemblyVersion>0.0.2</AssemblyVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -64,9 +64,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="DalamudPackager" Version="2.1.5" />
+        <PackageReference Include="DalamudPackager" Version="2.1.6" />
         <PackageReference Include="ILRepack" Version="2.0.18" />
-        <PackageReference Include="XivCommon" Version="4.0.0" />
+        <PackageReference Include="XivCommon" Version="5.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="bin\Debug\ReadyCheck.json" />
     </ItemGroup>
 
 
